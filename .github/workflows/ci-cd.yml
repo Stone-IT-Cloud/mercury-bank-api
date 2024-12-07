@@ -75,6 +75,9 @@ jobs:
   scan-dependencies:
     name: Scan dependencies
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src
     steps:
       - uses: actions/checkout@v4
       - name: install
