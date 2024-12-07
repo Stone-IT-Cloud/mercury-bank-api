@@ -1,0 +1,112 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  pull_request:
+    branches: [ "main", "development" ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # this job analyze the code to prevent sensitive information to be leaked
+  gitleaks-scan:
+    name: Checking for hardcoded secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: [gitleaks-scan]
+    strategy:
+      matrix:
+        linter: [flake8, pylint, ruff, pyright, fixit, pyre]
+    steps:
+      - uses: advanced-security/python-lint-code-scanning-action@v1
+        with:
+          linter: ${{ matrix.linter }}
+
+  static-analysis:
+    name: Static Code Analysis
+    needs: [gitleaks-scan, lint, scan-dependencies]
+    runs-on: ubuntu-latest
+
+    permissions:
+      # required for all workflows
+      security-events: write
+
+      # required to fetch internal or private CodeQL packs
+      packages: read
+
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Pysa Action
+        uses: facebook/pysa-action
+        with:
+          repo-directory: './src'
+          requirements-path: 'requirements.txt'
+          infer-types: true
+          include-default-sapp-filters: true
+          sapp-filters-directory: './sapp-filters'
+
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+  scan-dependencies:
+    name: Scan dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install
+        run: python -m pip install .
+      - uses: pypa/gh-action-pip-audit@v1.1.0
+  # This job scans the code and get recommendation from Gemini AI that are being posted into the PR as comments
+  ai-review:
+    runs-on: ubuntu-latest
+    needs: [gitleaks-scan, lint, scan-dependencies]
+    permissions:
+      contents: read
+      pull-requests: write
+    name: AI review
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - uses: Stone-IT-Cloud/gemini-code-review-action@0.0.2
+        name: "Code Review by Gemini AI"
+        id: review
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_repository: ${{ github.repository }}
+          github_pull_request_number: ${{ github.event.pull_request.number }}
+          git_commit_hash: ${{ github.event.pull_request.head.sha }}
+          model: ${{ env.GEMINI_MODEL }}
+          pull_request_diff: ${{ github.event.pull_request.diff }}
+          extra_prompt: |-
+            Please write your review in English as an experienced Golang developer.
+          log_level: "INFO"
+      - name: Check for errors (example)
+        if: steps.review.outcome != 'success'
+        run: |
+          echo "Gemini review failed!"
+          exit 1
