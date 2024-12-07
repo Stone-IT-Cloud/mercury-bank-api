@@ -6,6 +6,8 @@ name: CI-CD
 on:
   pull_request:
     branches: [ "main", "development" ]
+env:
+  GEMINI_MODEL: "gemini-1.5-pro-latest"
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -24,7 +26,7 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    needs: [gitleaks-scan]
+    needs: [gitleaks-scan, scan-dependencies]
     strategy:
       matrix:
         linter: [flake8, pylint, ruff, pyright, fixit, pyre]
