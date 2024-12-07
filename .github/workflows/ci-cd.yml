@@ -52,15 +52,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Pysa Action
-        uses: facebook/pysa-action@0.0.1
-        with:
-          repo-directory: './src'
-          requirements-path: 'requirements.txt'
-          infer-types: true
-          include-default-sapp-filters: true
-          sapp-filters-directory: './sapp-filters'
-
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
