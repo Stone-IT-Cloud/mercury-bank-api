@@ -39,6 +39,9 @@ jobs:
     name: Static Code Analysis
     needs: [gitleaks-scan, lint, scan-dependencies]
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
 
     permissions:
       # required for all workflows
