@@ -31,13 +31,16 @@ repos:
     rev: 1.8.0  # Use the ref you want to point at
     hooks:
     - id: bandit
+      args: ["-c", ".bandit"]
 
   - repo: local
     hooks:
     - id: pylint
       name: pylint
-      entry: pylint
-      language: system
+      entry: .venv/bin/python -m pylint
+      language: python
       types: [python]
       args:
           - --disable=C0301
+      env:
+        PYTHONPATH: "src"
