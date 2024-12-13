@@ -111,7 +111,7 @@ jobs:
           } >> $GITHUB_OUTPUT
 
       - name: Show diff
-        run: echo "${{ steps.get_diff.outputs.pull_request_diff }}"
+        run: echo "${{ steps.get_diff.outputs.pull_request_diff }}; exit 0"
       - uses: Stone-IT-Cloud/gemini-code-review-action@0.0.2
         name: "Code Review by Gemini AI"
         id: review
