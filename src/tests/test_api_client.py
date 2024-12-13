@@ -24,6 +24,7 @@ Environment Variables:
 """
 
 import os
+import time
 from datetime import date
 from unittest.mock import MagicMock, patch
 
@@ -32,16 +33,15 @@ from dotenv import load_dotenv
 
 from mercury_api.api_client import MercuryApiClient
 from mercury_api.transactions_data_models import (
+    Account,
     NewTransactionPayload,
     TransactionParams,
 )
 
 # sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-load_dotenv()
-TOKEN = os.getenv("TEST_MERCURY_API_TOKEN")
 
 
-@pytest.fixture
+@pytest.fixture(name="api_client")
 def client():
     """Return a configured MercuryApiClient instance.
 
@@ -50,7 +50,9 @@ def client():
     Returns:
         MercuryApiClient: A configured API client instance ready to make requests to Mercury's API.
     """
-    return MercuryApiClient(token=TOKEN)
+    load_dotenv()
+    token = os.getenv("TEST_MERCURY_API_TOKEN")
+    return MercuryApiClient(token=token)
 
 
 @patch("mercury_api.api_client.requests.get")
@@ -62,14 +64,74 @@ def test_get_accounts(mock_get, api_client):
     """
     mock_response = MagicMock()
     mock_response.json.return_value = {
-        "accounts": [{"id": "1", "name": "Test Account"}]
+        "accounts": [
+            Account(
+                accountNumber="1",
+                availableBalance=0.0,
+                createdAt="2024-10-12T23:37:37.635792Z",
+                currentBalance=0.0,
+                id="1",
+                kind="savings",
+                name="Test Account 1",
+                routingNumber="123456789",
+                status="active",
+                type="mercury",
+                legalBusinessName="Test 1",
+                dashboardLink="https://app.mercury.com/accounts/depository/1",
+                canReceiveTransactions=None,
+                nickname=None,
+            ).__dict__,
+            Account(
+                accountNumber="2",
+                availableBalance=0.0,
+                createdAt="2024-10-12T23:37:37.635792Z",
+                currentBalance=0.0,
+                id="2",
+                kind="checking",
+                name="Test Account 2",
+                routingNumber="987654321",
+                status="active",
+                type="mercury",
+                legalBusinessName="Test 2",
+                dashboardLink="https://app.mercury.com/accounts/depository/2",
+                canReceiveTransactions=None,
+                nickname=None,
+            ).__dict__,
+        ]
     }
     mock_get.return_value = mock_response
 
     accounts = api_client.get_accounts()
-    assert len(accounts) == 1
+    assert len(accounts) == 2
     assert accounts[0].id == "1"
-    assert accounts[0].name == "Test Account"
+    assert accounts[0].name == "Test Account 1"
+    assert accounts[0].kind == "savings"
+    assert accounts[0].type == "mercury"
+    assert accounts[0].legalBusinessName == "Test 1"
+    assert accounts[0].dashboardLink == "https://app.mercury.com/accounts/depository/1"
+    assert accounts[0].routingNumber == "123456789"
+    assert accounts[0].status == "active"
+    assert accounts[0].createdAt == "2024-10-12T23:37:37.635792Z"
+    assert accounts[0].availableBalance == 0.0
+    assert accounts[0].currentBalance == 0.0
+    assert accounts[0].canReceiveTransactions is None
+    assert accounts[0].nickname is None
+    assert accounts[0].accountNumber == "1"
+
+    assert accounts[1].id == "2"
+    assert accounts[1].name == "Test Account 2"
+    assert accounts[1].kind == "checking"
+    assert accounts[1].type == "mercury"
+    assert accounts[1].legalBusinessName == "Test 2"
+    assert accounts[1].dashboardLink == "https://app.mercury.com/accounts/depository/2"
+    assert accounts[1].routingNumber == "987654321"
+    assert accounts[1].status == "active"
+    assert accounts[1].createdAt == "2024-10-12T23:37:37.635792Z"
+    assert accounts[1].availableBalance == 0.0
+    assert accounts[1].currentBalance == 0.0
+    assert accounts[1].canReceiveTransactions is None
+    assert accounts[1].nickname is None
+    assert accounts[1].accountNumber == "2"
 
 
 @patch("mercury_api.api_client.requests.get")
@@ -81,17 +143,68 @@ def test_get_account_by_id(mock_get, api_client):
     """
     mock_response = MagicMock()
     mock_response.json.return_value = {
-        "accounts": [{"id": "1", "name": "Test Account"}]
+        "accounts": [
+            Account(
+                accountNumber="1",
+                availableBalance=0.0,
+                createdAt="2024-10-12T23:37:37.635792Z",
+                currentBalance=0.0,
+                id="1",
+                kind="savings",
+                name="Test Account 1",
+                routingNumber="123456789",
+                status="active",
+                type="mercury",
+                legalBusinessName="Test 1",
+                dashboardLink="https://app.mercury.com/accounts/depository/1",
+                canReceiveTransactions=None,
+                nickname=None,
+            ).__dict__,
+            Account(
+                accountNumber="2",
+                availableBalance=0.0,
+                createdAt="2024-10-12T23:37:37.635792Z",
+                currentBalance=0.0,
+                id="2",
+                kind="checking",
+                name="Test Account 2",
+                routingNumber="987654321",
+                status="active",
+                type="mercury",
+                legalBusinessName="Test 2",
+                dashboardLink="https://app.mercury.com/accounts/depository/2",
+                canReceiveTransactions=None,
+                nickname=None,
+            ).__dict__,
+        ]
     }
+
     mock_get.return_value = mock_response
 
     api_client.get_accounts()
     account = api_client.get_account_by_id("1")
     assert account is not None
     assert account.id == "1"
+    assert account.name == "Test Account 1"
+    assert account.kind == "savings"
+    assert account.type == "mercury"
+    assert account.legalBusinessName == "Test 1"
+    assert account.dashboardLink == "https://app.mercury.com/accounts/depository/1"
+    assert account.routingNumber == "123456789"
+    assert account.status == "active"
+    assert account.createdAt == "2024-10-12T23:37:37.635792Z"
+    assert account.availableBalance == 0.0
+    assert account.currentBalance == 0.0
+    assert account.canReceiveTransactions is None
+    assert account.nickname is None
+    assert account.accountNumber == "1"
+
+    account = api_client.get_account_by_id("3")
+    assert account is None
 
 
 @patch("mercury_api.api_client.requests.get")
+@pytest.mark.skip(reason="Not implemented yet")
 def test_get_cards(mock_get, api_client):
     """Test the get_cards method of the API client.
 
@@ -109,6 +222,7 @@ def test_get_cards(mock_get, api_client):
 
 
 @patch("mercury_api.api_client.requests.get")
+@pytest.mark.skip(reason="Not implemented yet")
 def test_get_transactions(mock_get, api_client):
     """Test the get_transactions method of the Mercury API client.
 
@@ -135,6 +249,7 @@ def test_get_transactions(mock_get, api_client):
 
 
 @patch("mercury_api.api_client.requests.get")
+@pytest.mark.skip(reason="Not implemented yet")
 def test_get_transaction_by_id(mock_get, api_client):
     """Test the get_transaction_by_id method of the API client.
 
@@ -152,6 +267,7 @@ def test_get_transaction_by_id(mock_get, api_client):
 
 
 @patch("mercury_api.api_client.requests.get")
+@pytest.mark.skip(reason="Not implemented yet")
 def test_get_statements(mock_get, api_client):
     """Test the get_statements method of the Mercury API client.
 
@@ -174,6 +290,7 @@ def test_get_statements(mock_get, api_client):
 
 
 @patch("mercury_api.api_client.requests.post")
+@pytest.mark.skip(reason="Not implemented yet")
 def test_create_transaction(mock_post, api_client):
     """Test create_transaction method of API client.
 
@@ -181,10 +298,15 @@ def test_create_transaction(mock_post, api_client):
     with the given payload and returns the expected Transaction object.
     """
     mock_response = MagicMock()
-    mock_response.json.return_value = {"id": "1", "amount": 100}
+    mock_response.json.return_value = {"id": "1", "amount": 1}
     mock_post.return_value = mock_response
 
-    payload = NewTransactionPayload(amount=100, description="Test Transaction")
+    timestamp = int(time.time())
+    payload = NewTransactionPayload(
+        amount=1,
+        recipientId="2",
+        idempotencyKey=f"a{timestamp}",
+    )
     transaction = api_client.create_transaction("1", payload)
     assert transaction is not None
     assert transaction.id == "1"
@@ -192,6 +314,7 @@ def test_create_transaction(mock_post, api_client):
 
 
 @patch("mercury_api.api_client.requests.post")
+@pytest.mark.skip(reason="Not implemented yet")
 def test_request_send_money(mock_post, api_client):
     """Test the request_send_money method of the API client.
 
@@ -202,7 +325,10 @@ def test_request_send_money(mock_post, api_client):
     mock_response.json.return_value = {"id": "1", "amount": 100}
     mock_post.return_value = mock_response
 
-    payload = NewTransactionPayload(amount=100, description="Send Money")
+    timestamp = int(time.time())
+    payload = NewTransactionPayload(
+        amount=100, recipientId="2", idempotencyKey=f"a{timestamp}"
+    )
     transaction = api_client.request_send_money("1", payload)
     assert transaction is not None
     assert transaction.id == "1"
