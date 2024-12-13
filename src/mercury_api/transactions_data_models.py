@@ -358,9 +358,9 @@ class TransactionParams:
     limit: int = 500
     offset: int = 0
     status: Literal["pending", "sent", "cancelled", "failed"] = None
-    start: date = None  # Format: YYYY-MM-DD or an ISO 8601 string
-    end: date = None  # Format: YYYY-MM-DD or an ISO 8601 string
-    search: str = None
+    start: Optional[date] = None  # Format: YYYY-MM-DD or an ISO 8601 string
+    end: Optional[date] = None  # Format: YYYY-MM-DD or an ISO 8601 string
+    search: Optional[str] = None
 
 
 @dataclass
