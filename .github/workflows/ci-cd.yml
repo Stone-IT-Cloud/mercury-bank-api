@@ -93,6 +93,24 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: "Get diff of the pull request"
+        id: get_diff
+        shell: bash
+        env:
+          PULL_REQUEST_HEAD_REF: "${{ github.event.pull_request.head.ref }}"
+          PULL_REQUEST_BASE_REF: "${{ github.event.pull_request.base.ref }}"
+        run: |-
+          git fetch origin "${{ env.PULL_REQUEST_HEAD_REF }}"
+          git fetch origin "${{ env.PULL_REQUEST_BASE_REF }}"
+          git checkout "${{ env.PULL_REQUEST_HEAD_REF }}"
+          git diff "origin/${{ env.PULL_REQUEST_BASE_REF }}" > "diff.txt"
+          {
+            echo "pull_request_diff<<EOF";
+            cat "diff.txt";
+            echo 'EOF';
+          } >> $GITHUB_OUTPUT
+          cat diff.txt
+
       - uses: Stone-IT-Cloud/gemini-code-review-action@0.0.2
         name: "Code Review by Gemini AI"
         id: review
@@ -103,7 +121,7 @@ jobs:
           github_pull_request_number: ${{ github.event.pull_request.number }}
           git_commit_hash: ${{ github.event.pull_request.head.sha }}
           model: ${{ env.GEMINI_MODEL }}
-          pull_request_diff: ${{ github.event.pull_request.diff }}
+          pull_request_diff: ${{ steps.get_diff.outputs.pull_request_diff }}
           extra_prompt: |-
             Please write your review in English as an experienced Python developer.
           log_level: "INFO"
