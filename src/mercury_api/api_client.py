@@ -116,6 +116,7 @@ class MercuryApiClient:
 
         url = f"{self.base_url}/api/v1/accounts"
         response = self._make_request(url).json()
+
         for account in response["accounts"]:
             account = Account(**account)
             self.accounts.append(account)

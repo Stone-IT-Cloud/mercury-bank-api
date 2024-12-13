@@ -900,10 +900,10 @@ class NewTransactionPayload:
 
     recipientId: str
     amount: float
+    idempotencyKey: str
     paymentMethod: Literal["ach"] = "ach"
     note: Optional[str] = None
     externalMemo: Optional[str] = None
-    idempotencyKey: str
 
 
 @dataclass
