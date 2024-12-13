@@ -93,8 +93,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - uses: technote-space/get-diff-action@v6
+
       - name: Show diff
-        run: echo "${{ github.event.pull_request.diff }}"
+        run: echo ${{ env.GIT_DIFF }}
       - uses: Stone-IT-Cloud/gemini-code-review-action@0.0.2
         name: "Code Review by Gemini AI"
         id: review
@@ -105,7 +107,7 @@ jobs:
           github_pull_request_number: ${{ github.event.pull_request.number }}
           git_commit_hash: ${{ github.event.pull_request.head.sha }}
           model: ${{ env.GEMINI_MODEL }}
-          pull_request_diff: ${{ github.event.pull_request.diff }}
+          pull_request_diff: ${{ env.GIT_DIFF }}
           extra_prompt: |-
             Please write your review in English as an experienced Python developer.
           log_level: "INFO"
